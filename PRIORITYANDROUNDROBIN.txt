@@ -1,0 +1,197 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX 10
+
+
+struct Process {
+    int id;
+    int arrival_time;
+    int burst_time;
+    int priority;
+    int remaining_time;
+    int waiting_time;
+    int turnaround_time;
+};
+
+
+void calculate_wait_turnaround_time_non_preemptive(struct Process processes[], int n) {
+    int time = 0;
+    int completed = 0;
+    int min_priority = 999;
+    int shortest = -1;
+
+    while (completed != n) {
+        min_priority = 999;
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= time && processes[i].priority < min_priority && processes[i].remaining_time > 0) {
+                min_priority = processes[i].priority;
+                shortest = i;
+            }
+        }
+
+        if (shortest != -1) {
+            processes[shortest].remaining_time--;
+            time++;
+
+            if (processes[shortest].remaining_time == 0) {
+                completed++;
+                processes[shortest].turnaround_time = time - processes[shortest].arrival_time;
+                processes[shortest].waiting_time = processes[shortest].turnaround_time - processes[shortest].burst_time;
+            }
+        } else {
+            time++;
+        }
+    }
+}
+
+
+void calculate_wait_turnaround_time_preemptive(struct Process processes[], int n) {
+    int time = 0;
+    int completed = 0;
+    int min_priority = 999;
+    int shortest = -1;
+
+    while (completed != n) {
+        min_priority = 999;
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= time && processes[i].priority < min_priority && processes[i].remaining_time > 0) {
+                min_priority = processes[i].priority;
+                shortest = i;
+            }
+        }
+
+        if (shortest != -1) {
+            processes[shortest].remaining_time--;
+            time++;
+
+            if (processes[shortest].remaining_time == 0) {
+                completed++;
+                processes[shortest].turnaround_time = time - processes[shortest].arrival_time;
+                processes[shortest].waiting_time = processes[shortest].turnaround_time - processes[shortest].burst_time;
+            }
+        } else {
+            time++;
+        }
+    }
+}
+
+g
+void calculate_wait_turnaround_time_rr(struct Process processes[], int n, int quantum) {
+    int time = 0;
+    int remaining_processes = n;
+    int completed = 0;
+
+
+    for (int i = 0; i < n; i++) {
+        processes[i].remaining_time = processes[i].burst_time;
+    }
+
+
+    while (remaining_processes > 0) {
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival_time <= time && processes[i].remaining_time > 0) {
+                if (processes[i].remaining_time <= quantum) {
+                    time += processes[i].remaining_time;
+                    processes[i].remaining_time = 0;
+                    processes[i].turnaround_time = time - processes[i].arrival_time;
+                    processes[i].waiting_time = processes[i].turnaround_time - processes[i].burst_time;
+                    remaining_processes--;
+                } else {
+                    time += quantum;
+                    processes[i].remaining_time -= quantum;
+                }
+            }
+        }
+    }
+}
+
+
+void display(struct Process processes[], int n) {
+    printf("Process ID | Arrival Time | Burst Time | Priority | Waiting Time | Turnaround Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i].id, processes[i].arrival_time, processes[i].burst_time, processes[i].priority, processes[i].waiting_time, processes[i].turnaround_time);
+    }
+}
+
+
+int main() {
+    int n, choice, quantum;
+    struct Process processes[MAX];
+
+    // Taking input
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+
+    for (int i = 0; i < n; i++) {
+        processes[i].id = i + 1;
+        printf("Enter details for Process %d\n", i + 1);
+        printf("Arrival Time: ");
+        scanf("%d", &processes[i].arrival_time);
+        printf("Burst Time: ");
+        scanf("%d", &processes[i].burst_time);
+        printf("Priority: ");
+        scanf("%d", &processes[i].priority);
+        processes[i].remaining_time = processes[i].burst_time;
+    }
+
+
+    printf("\nChoose the Scheduling Algorithm:\n");
+    printf("1. Non-preemptive Priority Scheduling\n");
+    printf("2. Preemptive Priority Scheduling\n");
+    printf("3. Round Robin Scheduling\n");
+    printf("Enter your choice: ");
+    scanf("%d", &choice);
+
+    switch (choice) {
+        case 1:
+            calculate_wait_turnaround_time_non_preemptive(processes, n);
+            display(processes, n);
+            break;
+
+        case 2:
+            calculate_wait_turnaround_time_preemptive(processes, n);
+            display(processes, n);
+            break;
+
+        case 3:
+            printf("Enter quantum time for Round Robin Scheduling: ");
+            scanf("%d", &quantum);
+            calculate_wait_turnaround_time_rr(processes, n, quantum);
+            display(processes, n);
+            break;
+
+        default:
+            printf("Invalid choice!\n");
+    }
+
+    return 0;
+}
+
+OUTPUT-
+Enter number of processes: 3
+Enter details for Process 1
+Arrival Time: 2
+Burst Time: 3
+Priority: 4
+Enter details for Process 2
+Arrival Time: 1
+Burst Time: 5
+Priority: 6
+Enter details for Process 3
+Arrival Time: 7
+Burst Time: 6
+Priority: 5
+
+Choose the Scheduling Algorithm:
+1. Non-preemptive Priority Scheduling
+2. Preemptive Priority Scheduling
+3. Round Robin Scheduling
+Enter your choice: 1
+Process ID | Arrival Time | Burst Time | Priority | Waiting Time | Turnaround Time
+1               2               3               4               0               3
+2               1               5               6               9               14
+3               7               6               5               0               6
+
+Process returned 0 (0x0)   execution time : 18.563 s
+Press any key to continue.
