@@ -51,6 +51,7 @@ int main() {
     free(p);
     return 0;
 }
+OUTPUT-
 
 Enter number of processes: 3
 Enter Process ID, Arrival Time, and Burst Time for P1: 1
