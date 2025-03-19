@@ -1,0 +1,122 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
+typedef struct {
+    int pid, at, bt, ct, tat, wt, remaining;
+} Process;
+
+void sort_by_arrival(Process p[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (p[j].at > p[j + 1].at) {
+                Process temp = p[j];
+                p[j] = p[j + 1];
+                p[j + 1] = temp;
+            }
+        }
+    }
+}
+
+void sjf_non_preemptive(Process p[], int n) {
+    int completed = 0, time = 0, min_index;
+    while (completed < n) {
+        min_index = -1;
+        for (int i = 0; i < n; i++) {
+            if (p[i].at <= time && p[i].remaining > 0) {
+                if (min_index == -1 || p[i].bt < p[min_index].bt)
+                    min_index = i;
+            }
+        }
+        if (min_index == -1) {
+            time++;
+            continue;
+        }
+        time += p[min_index].bt;
+        p[min_index].ct = time;
+        p[min_index].tat = p[min_index].ct - p[min_index].at;
+        p[min_index].wt = p[min_index].tat - p[min_index].bt;
+        p[min_index].remaining = 0;
+        completed++;
+    }
+}
+
+void sjf_preemptive(Process p[], int n) {
+    int completed = 0, time = 0, min_index;
+    for (int i = 0; i < n; i++) p[i].remaining = p[i].bt;
+    while (completed < n) {
+        min_index = -1;
+        for (int i = 0; i < n; i++) {
+            if (p[i].at <= time && p[i].remaining > 0) {
+                if (min_index == -1 || p[i].remaining < p[min_index].remaining)
+                    min_index = i;
+            }
+        }
+        if (min_index == -1) {
+            time++;
+            continue;
+        }
+        p[min_index].remaining--;
+        time++;
+        if (p[min_index].remaining == 0) {
+            p[min_index].ct = time;
+            p[min_index].tat = p[min_index].ct - p[min_index].at;
+            p[min_index].wt = p[min_index].tat - p[min_index].bt;
+            completed++;
+        }
+    }
+}
+
+void display(Process p[], int n) {
+    printf("\nPID\tAT\tBT\tCT\tTAT\tWT\n");
+    for (int i = 0; i < n; i++)
+        printf("%d\t%d\t%d\t%d\t%d\t%d\n", p[i].pid, p[i].at, p[i].bt, p[i].ct, p[i].tat, p[i].wt);
+}
+
+int main() {
+    int n, choice;
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+    Process *p = (Process *)malloc(n * sizeof(Process));
+    for (int i = 0; i < n; i++) {
+        printf("Enter Process ID, Arrival Time, and Burst Time for P%d: ", i + 1);
+        scanf("%d %d %d", &p[i].pid, &p[i].at, &p[i].bt);
+        p[i].remaining = p[i].bt;
+    }
+    printf("Enter 1 for Non-Preemptive SJF, 2 for Preemptive SJF: ");
+    scanf("%d", &choice);
+    sort_by_arrival(p, n);
+    if (choice == 1) {
+        sjf_non_preemptive(p, n);
+        printf("\n--- SJF Non-Preemptive Scheduling ---\n");
+    } else {
+        sjf_preemptive(p, n);
+        printf("\n--- SJF Preemptive Scheduling ---\n");
+    }
+    display(p, n);
+    free(p);
+    return 0;
+}
+
+OUTPUT-
+Enter number of processes: 3
+Enter Process ID, Arrival Time, and Burst Time for P1: 1
+2
+3
+Enter Process ID, Arrival Time, and Burst Time for P2: 2
+3
+4
+Enter Process ID, Arrival Time, and Burst Time for P3: 3
+4
+5
+Enter 1 for Non-Preemptive SJF, 2 for Preemptive SJF: 1
+
+--- SJF Non-Preemptive Scheduling ---
+
+PID     AT      BT      CT      TAT     WT
+1       2       3       5       3       0
+2       3       4       9       6       2
+3       4       5       14      10      5
+
+Process returned 0 (0x0)   execution time : 20.016 s
+Press any key to continue.
